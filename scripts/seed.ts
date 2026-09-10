@@ -37,7 +37,6 @@ async function main() {
       institutionType: row.institution_type.trim(),
       targetLocation: row.target_location.trim() || null,
       historicalOpenDate: row.historical_open_date.trim() || null,
-      status: doesNotSponsor ? "does_not_sponsor" : "unknown",
     };
 
     const existing = await db.query.firms.findFirst({
@@ -45,10 +44,16 @@ async function main() {
     });
 
     if (existing) {
+      // Deliberately excludes `status` — once a firm has been checked for
+      // real, re-seeding (e.g. to refresh historical dates) must not wipe
+      // out that live tracking state back to "unknown".
       await db.update(firms).set(values).where(eq(firms.id, existing.id));
       updated++;
     } else {
-      await db.insert(firms).values(values);
+      await db.insert(firms).values({
+        ...values,
+        status: doesNotSponsor ? "does_not_sponsor" : "unknown",
+      });
       created++;
     }
   }
