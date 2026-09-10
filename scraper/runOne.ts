@@ -75,6 +75,7 @@ export async function runOne(
     currentStatus: firm.status,
     previousMatchedKeywords,
     newMatchedKeywords: matchedKeywords,
+    isFirstCheck: previousCheckRun === undefined,
   });
 
   if (newStatus && newStatus !== firm.status) {

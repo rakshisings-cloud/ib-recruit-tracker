@@ -23,7 +23,9 @@ export default function WatchTargetManager({
   const [showForm, setShowForm] = useState(targets.length === 0);
   const [url, setUrl] = useState("");
   const [cssSelector, setCssSelector] = useState("");
-  const [keywords, setKeywords] = useState("2028, Summer Analyst, Full-Time Analyst, Apply Now");
+  const [keywords, setKeywords] = useState(
+    "2028, Class of 2028, Summer 2028, Summer Analyst, Investment Banking Summer Analyst, IB Summer Analyst, Summer Internship, Investment Banking Internship, Full-Time Analyst, Analyst Program, Applications Open, Apply Now"
+  );
   const [fetchStrategy, setFetchStrategy] = useState("http");
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
