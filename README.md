@@ -8,7 +8,7 @@ tracking only — no networking/conversion-calculator features (those stay in yo
 
 - **Next.js 16 (App Router)** on Vercel — dashboard UI + CRUD API routes.
 - **Postgres on Neon** via **Drizzle ORM** — shared by the web app and the scraper.
-- **GitHub Actions** (hourly cron) runs the actual scraper (`scraper/index.ts`), since Playwright's
+- **GitHub Actions** (cron, every 10 minutes) runs the actual scraper (`scraper/index.ts`), since Playwright's
   Chromium binary doesn't fit cleanly in a Vercel serverless function. The Next.js app never
   launches a browser itself — it does CRUD, and for browser-strategy firms it dispatches the GH
   Actions workflow on demand ("Check Now").
@@ -98,11 +98,19 @@ button in sync.
 - **Treat every alert as "go verify manually," not as confirmed fact.**
 - **LinkedIn is intentionally never scraped** (their ToS prohibits it) — track LinkedIn-only firms
   by hand.
-- Before trusting hourly polling on a firm, skim its `robots.txt` and ToS; if a target starts
+- Before trusting frequent polling on a firm, skim its `robots.txt` and ToS; if a target starts
   returning errors consistently, deactivate it rather than trying to work around the block.
+- Polling every 10 minutes is still a single lightweight request per active firm per run — nowhere
+  near aggressive traffic — but it's a step up from the original 30-60 minute politeness target. If
+  a firm ever seems to react to the traffic (rate limiting, IP blocks), dial its target back down or
+  deactivate it.
 
 ## Cost
 
-$0/month at this scale: Vercel Hobby, Neon free tier, Resend free tier (3,000 emails/month), and
-GitHub Actions (unlimited on a public repo; 2,000 free minutes/month on a private one — a full
-hourly run across ~45 firms takes roughly 1-3 minutes).
+$0/month at this scale on a **public** repo: Vercel Hobby, Neon free tier, Resend free tier (3,000
+emails/month), and GitHub Actions minutes are unlimited on public repos regardless of frequency.
+**On a private repo**, GitHub Actions gives 2,000 free minutes/month — a run across ~45 firms takes
+roughly 1-3 minutes, and at every-10-minutes that's ~144 runs/day, which would blow past the free
+tier fast (potentially 4,000-13,000 min/month) and start costing money. Keep this repo public to
+run at this frequency for free, or dial the cron back down (e.g. hourly, `0 * * * *`) if you make it
+private.
