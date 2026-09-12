@@ -26,13 +26,14 @@ See `db/schema.ts` for the data model (`firms`, `watch_targets`, `check_runs`, `
 3. **GitHub repo** — push this project to a new repo (public keeps Actions minutes unlimited;
    private is fine too, see cost note below).
 4. **GitHub → Settings → Secrets and variables → Actions**, add:
-   - `DATABASE_URL`, `RESEND_API_KEY`, `ALERT_TO_EMAIL`, `ALERT_FROM_EMAIL`
+   - `DATABASE_URL`, `RESEND_API_KEY`, `ALERT_TO_EMAILS`, `ALERT_FROM_EMAIL`
 5. **GitHub Personal Access Token** (fine-grained, scoped to this repo, Actions: read/write) — used
    by the dashboard's "Check Now" button to trigger the workflow for browser-strategy firms.
 6. **Vercel** — import the repo, set the same env vars as `.env.example` describes, plus
-   `GITHUB_OWNER` / `GITHUB_REPO` / `GITHUB_DISPATCH_TOKEN` (the PAT from step 5) and
+   `GITHUB_OWNER` / `GITHUB_REPO` / `GITHUB_DISPATCH_TOKEN` (the PAT from step 5),
    `PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1` (Vercel installs devDependencies including Playwright at
-   build time but never launches a browser — this skips the ~300MB Chromium download there).
+   build time but never launches a browser — this skips the ~300MB Chromium download there), and
+   `SITE_USERNAME` / `SITE_PASSWORD` (your own choice of credentials — see below).
 7. Run the DB migration once against Neon: `DATABASE_URL=... npm run db:migrate`.
 8. Seed the firm list: `DATABASE_URL=... npm run seed` (reads `seed/firms.csv`).
 9. Deploy to Vercel, open the dashboard, and add a watch-target URL per firm (see below) — the
@@ -70,6 +71,22 @@ A firm flips to **Application Open** the first time a configured keyword appears
 present on the previous check, which triggers an email. Once a firm is `open` or
 `does_not_sponsor`, the scheduled run stops actively polling it (use "Check Now" to re-check
 manually if needed).
+
+## Access control
+
+The entire site (dashboard + API routes) is gated behind HTTP Basic Auth via `proxy.ts`, using
+whatever `SITE_USERNAME` / `SITE_PASSWORD` you set as Vercel env vars — pick your own values, they
+don't need to match anything else. Without both set, the site fails closed (returns 503) rather
+than silently allowing public access. Share those credentials with anyone you want to have
+dashboard access; there's no per-user login, just one shared password.
+
+## Alert recipients
+
+`ALERT_TO_EMAILS` accepts a comma-separated list, so multiple people can get the same alert emails
+(e.g. `ALERT_TO_EMAILS=you@example.com,friend@example.com`). Everyone on the list gets every alert
+— there's no per-person firm subscription, it's all-or-nothing. Update this in both the GitHub
+Actions secret and the Vercel env var to keep the scheduled scraper and the dashboard's "Check Now"
+button in sync.
 
 ## Known limitations
 

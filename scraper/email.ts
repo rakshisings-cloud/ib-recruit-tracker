@@ -16,11 +16,15 @@ export async function sendAlertEmail(params: {
   newStatus: string;
   url: string;
 }): Promise<void> {
-  const to = process.env.ALERT_TO_EMAIL;
+  const toRaw = process.env.ALERT_TO_EMAILS;
   const from = process.env.ALERT_FROM_EMAIL;
-  if (!to || !from) {
-    throw new Error("ALERT_TO_EMAIL / ALERT_FROM_EMAIL is not set");
+  if (!toRaw || !from) {
+    throw new Error("ALERT_TO_EMAILS / ALERT_FROM_EMAIL is not set");
   }
+  const to = toRaw
+    .split(",")
+    .map((email) => email.trim())
+    .filter(Boolean);
 
   const subject =
     params.newStatus === "open"
