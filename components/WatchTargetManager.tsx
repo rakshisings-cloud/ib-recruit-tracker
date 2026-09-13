@@ -24,7 +24,7 @@ export default function WatchTargetManager({
   const [url, setUrl] = useState("");
   const [cssSelector, setCssSelector] = useState("");
   const [keywords, setKeywords] = useState(
-    "2028, Class of 2028, Summer 2028, Summer Analyst, Investment Banking Summer Analyst, IB Summer Analyst, Summer Internship, Investment Banking Internship, Applications Open, Apply Now"
+    "2028 summer analyst program, 2028 summer investment banking internship, 2028 M&A, 2028"
   );
   const [fetchStrategy, setFetchStrategy] = useState("http");
   const [error, setError] = useState<string | null>(null);

@@ -26,6 +26,13 @@ export type StatusTransitionInput = {
  * generic evergreen page text (e.g. "Apply Now" in a nav link). We only
  * record a baseline on the first check and never alert from it — real
  * detection starts from the second check onward.
+ *
+ * Recovering from "error" (the fetch itself was previously broken, e.g. a
+ * bad URL or wrong fetch strategy) is treated the same way: we can't trust
+ * keyword history from before the outage, so a successful fetch always
+ * re-establishes a fresh "not_open" baseline rather than either staying
+ * stuck on "error" forever or immediately reading an already-present
+ * keyword as "just opened."
  */
 export function determineNewStatus({
   currentStatus,
@@ -35,8 +42,9 @@ export function determineNewStatus({
 }: StatusTransitionInput): "open" | "not_open" | null {
   if (currentStatus === "does_not_sponsor") return null;
 
-  if (isFirstCheck) {
-    return newMatchedKeywords.length === 0 && currentStatus === "unknown" ? "not_open" : null;
+  const needsFreshBaseline = isFirstCheck || currentStatus === "error";
+  if (needsFreshBaseline) {
+    return currentStatus !== "not_open" ? "not_open" : null;
   }
 
   const newlyAppeared = newMatchedKeywords.filter(
