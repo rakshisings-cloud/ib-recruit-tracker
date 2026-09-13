@@ -3,7 +3,6 @@ import type { Browser } from "playwright";
 import { db } from "../db/client";
 import { firms, watchTargets, checkRuns, alerts } from "../db/schema";
 import { fetchHttp } from "./fetchers/http";
-import { fetchBrowser } from "./fetchers/browser";
 import { hashText, findMatchedKeywords, determineNewStatus } from "./detect";
 import { sendAlertEmail } from "./email";
 
@@ -30,9 +29,19 @@ export async function runOne(
 
   const keywords = watchTarget.keywords as string[];
 
+  // Dynamically imported so the "playwright" module is only ever loaded in
+  // the process that actually launches a browser (the GitHub Actions
+  // scraper). Vercel deliberately skips downloading Playwright's browser
+  // binaries to keep builds fast, so a static top-level import of this
+  // module would crash every Vercel-invoked call to runOne() — including
+  // http-strategy checks that never touch Playwright at all.
   const fetchResult =
     watchTarget.fetchStrategy === "browser" && opts.browser
-      ? await fetchBrowser(opts.browser, watchTarget.url, watchTarget.cssSelector)
+      ? await (await import("./fetchers/browser")).fetchBrowser(
+          opts.browser,
+          watchTarget.url,
+          watchTarget.cssSelector
+        )
       : await fetchHttp(watchTarget.url, watchTarget.cssSelector);
 
   const contentHash = fetchResult.text ? hashText(fetchResult.text) : null;
